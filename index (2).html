@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TrainerHub | Less Manual Work. Better Training Management.</title>
+  <meta name="description" content="One simple platform to manage trainer attendance, class schedules, working hours, leave requests, and training progress." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ===== Design tokens ===== */
+    :root {
+      --color-primary: #2563eb;
+      --color-primary-dark: #1d4ed8;
+      --color-primary-soft: #eef3ff;
+      --color-navy: #0b1633;
+      --color-navy-2: #14234d;
+      --color-text: #0f172a;
+      --color-muted: #5b6478;
+      --color-border: #e3e8f3;
+      --color-bg: #ffffff;
+      --color-bg-alt: #f6f8fd;
+      --color-success: #15803d;
+      --color-success-bg: #ecfdf3;
+      --color-error: #b42318;
+      --color-error-bg: #fef3f2;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+      --shadow-float: 0 20px 50px rgba(15, 23, 42, 0.12);
+      --container: 1280px;
+      --header-h: 72px;
+    }
+
+    /* ===== Base ===== */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: calc(var(--header-h) + 16px); }
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      color: var(--color-text);
+      background: var(--color-bg);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    img, svg { display: block; max-width: 100%; }
+    a { color: inherit; text-decoration: none; }
+    button, input, select { font: inherit; }
+    h1, h2, h3, h4 { line-height: 1.15; margin: 0; letter-spacing: -0.02em; }
+    p { margin: 0; }
+    ul { margin: 0; padding: 0; list-style: none; }
+
+    .container {
+      width: 100%;
+      max-width: var(--container);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    .section { padding: 96px 0; }
+    .section--alt { background: var(--color-bg-alt); }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-primary);
+    }
+    .eyebrow::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--color-primary);
+    }
+    .section-head { text-align: center; max-width: 760px; margin: 0 auto 56px; }
+    .section-head h2 { font-size: clamp(30px, 4vw, 44px); margin: 16px 0; font-weight: 800; }
+    .section-head p { color: var(--color-muted); font-size: 17px; }
+
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+    :focus-visible { outline: 3px solid rgba(37, 99, 235, 0.45); outline-offset: 2px; }
+
+    /* ===== Buttons ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 48px;
+      padding: 0 22px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background-color .2s ease, color .2s ease, border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+      white-space: nowrap;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn--primary { background: var(--color-primary); color: #fff; box-shadow: 0 6px 18px rgba(37, 99, 235, 0.28); }
+    .btn--primary:hover { background: var(--color-primary-dark); }
+    .btn--ghost { background: #fff; color: var(--color-text); border-color: var(--color-border); }
+    .btn--ghost:hover { border-color: #c9d3e6; }
+    .btn--light { background: #fff; color: var(--color-navy); }
+    .btn--outline-light { background: transparent; color: #fff; border-color: rgba(255,255,255,.28); }
+    .btn--sm { height: 36px; padding: 0 14px; font-size: 14px; }
+    .btn:disabled { opacity: .7; cursor: not-allowed; transform: none; }
+    .btn .spinner {
+      width: 16px; height: 16px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
+      animation: spin .8s linear infinite; display: none;
+    }
+    .btn.is-loading .spinner { display: inline-block; }
+    .btn.is-loading .btn-label { opacity: .85; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== Header ===== */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      height: var(--header-h);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: saturate(160%) blur(10px);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .header-inner { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 19px; }
+    .brand-mark {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(135deg, #2563eb, #1e3a8a);
+      display: grid; place-items: center; color: #fff;
+    }
+    .brand small { display: block; font-size: 11px; font-weight: 500; color: var(--color-muted); letter-spacing: 0; }
+    .nav { display: flex; align-items: center; gap: 28px; }
+    .nav a { font-size: 14px; font-weight: 500; color: var(--color-muted); transition: color .2s; }
+    .nav a:hover, .nav a.is-active { color: var(--color-primary); }
+    .header-actions { display: flex; align-items: center; gap: 14px; }
+    .header-actions .login { font-size: 14px; font-weight: 600; color: var(--color-text); }
+    .menu-toggle {
+      display: none; width: 44px; height: 44px; border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm); background: #fff; cursor: pointer;
+      align-items: center; justify-content: center;
+    }
+    .menu-toggle span, .menu-toggle span::before, .menu-toggle span::after {
+      display: block; width: 18px; height: 2px; background: var(--color-text); border-radius: 2px;
+      position: relative; content: "";
+    }
+    .menu-toggle span::before { position: absolute; transform: translateY(-6px); }
+    .menu-toggle span::after { position: absolute; transform: translateY(6px); }
+    .mobile-menu {
+      display: none; position: absolute; top: var(--header-h); left: 0; right: 0;
+      background: #fff; border-bottom: 1px solid var(--color-border); box-shadow: var(--shadow-card);
+      padding: 16px 24px 24px;
+    }
+    .mobile-menu.is-open { display: block; }
+    .mobile-menu a { display: block; padding: 12px 0; font-weight: 500; border-bottom: 1px solid var(--color-border); }
+    .mobile-menu .btn { width: 100%; margin-top: 16px; }
+
+    /* ===== Hero ===== */
+    .hero { padding: 72px 0 96px; background:
+      radial-gradient(900px 500px at 85% -10%, rgba(37,99,235,.10), transparent 60%),
+      linear-gradient(#fff, #f7f9ff); }
+    .hero-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 64px; align-items: center; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px;
+      background: var(--color-primary-soft); color: var(--color-primary-dark);
+      font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    }
+    .hero h1 { font-size: clamp(40px, 5.4vw, 64px); font-weight: 800; margin: 22px 0 20px; }
+    .hero h1 .accent { color: var(--color-primary); display: block; }
+    .hero p.lead { font-size: 18px; color: var(--color-muted); max-width: 540px; }
+    .hero-ctas { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 32px; }
+    .hero-points { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 28px; font-size: 13px; color: var(--color-muted); }
+    .hero-points li { display: flex; align-items: center; gap: 8px; }
+    .hero-points li::before {
+      content: ""; width: 16px; height: 16px; border-radius: 50%;
+      background: var(--color-primary-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E") center/10px no-repeat;
+    }
+
+    /* Dashboard mockup */
+    .mockup {
+      background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-float); overflow: hidden;
+    }
+    .mockup-bar {
+      display: flex; align-items: center; gap: 14px; padding: 12px 16px;
+      border-bottom: 1px solid var(--color-border); background: #fbfcff;
+    }
+    .dots { display: flex; gap: 6px; }
+    .dots i { width: 10px; height: 10px; border-radius: 50%; background: #f3c6c1; }
+    .dots i:nth-child(2) { background: #fde7a3; }
+    .dots i:nth-child(3) { background: #bfe8c9; }
+    .url-pill { flex: 1; max-width: 300px; margin-left: auto; height: 26px; border-radius: 6px; background: #f0f3fa; font-size: 11px; color: var(--color-muted); display: flex; align-items: center; padding: 0 10px; }
+    .mockup-body { display: grid; grid-template-columns: 150px 1fr; min-height: 340px; }
+    .mockup-side { border-right: 1px solid var(--color-border); padding: 16px 12px; background: #fbfcff; }
+    .mockup-side h6 { margin: 4px 8px 10px; font-size: 10px; letter-spacing: .1em; color: var(--color-muted); text-transform: uppercase; }
+    .mockup-side .item { font-size: 12px; padding: 7px 8px; border-radius: 6px; color: var(--color-muted); margin-bottom: 2px; }
+    .mockup-side .item.active { background: var(--color-primary-soft); color: var(--color-primary-dark); font-weight: 600; }
+    .mockup-main { padding: 18px; }
+    .mockup-main .greet { font-weight: 700; font-size: 15px; }
+    .mockup-main .greet small { display: block; font-weight: 400; color: var(--color-muted); font-size: 11px; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0; }
+    .stat { border: 1px solid var(--color-border); border-radius: 8px; padding: 9px; }
+    .stat span { display: block; font-size: 10px; color: var(--color-muted); }
+    .stat b { font-size: 18px; }
+    .panel-row { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; }
+    .panel { border: 1px solid var(--color-border); border-radius: 8px; padding: 10px; }
+    .panel h5 { margin: 0 0 8px; font-size: 11px; }
+    .row-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 0; border-top: 1px solid #f0f3fa; font-size: 11px; }
+    .row-item:first-of-type { border-top: 0; }
+    .av { width: 22px; height: 22px; border-radius: 50%; background: #dbe6ff; color: var(--color-primary-dark); font-size: 9px; display: inline-grid; place-items: center; font-weight: 700; margin-right: 6px; }
+    .pill { font-size: 9px; padding: 2px 7px; border-radius: 999px; font-weight: 600; }
+    .pill--ok { background: var(--color-success-bg); color: var(--color-success); }
+    .pill--warn { background: #fff4e5; color: #b54708; }
+    .bars { display: flex; gap: 4px; align-items: flex-end; height: 70px; }
+    .bars i { flex: 1; border-radius: 3px; background: #dbe6ff; }
+    .bars i.hi { background: var(--color-primary); }
+
+    /* ===== Features (benefit cards) ===== */
+    .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .feature-card {
+      background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+      padding: 32px; box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: 14px;
+      transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .feature-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-float); }
+    .icon-box {
+      width: 48px; height: 48px; border-radius: 12px; background: var(--color-primary-soft);
+      color: var(--color-primary); display: grid; place-items: center;
+    }
+    .icon-box svg { width: 22px; height: 22px; }
+    .feature-card h3 { font-size: 20px; font-weight: 700; }
+    .feature-card p { color: var(--color-muted); font-size: 15px; }
+    .card-link { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--color-border); font-size: 14px; font-weight: 600; color: var(--color-primary); display: inline-flex; gap: 6px; align-items: center; }
+    .feature-card--wide { grid-column: span 2; background: linear-gradient(135deg, #f4f7ff, #ffffff); }
+    .feature-card--highlight { background: var(--color-primary); color: #fff; border-color: transparent; }
+    .feature-card--highlight p { color: rgba(255,255,255,.82); }
+    .feature-card--highlight .icon-box { background: rgba(255,255,255,.16); color: #fff; }
+    .feature-card--highlight .card-link { color: #fff; border-color: rgba(255,255,255,.2); }
+    .inline-note {
+      background: rgba(255,255,255,.12); border-radius: var(--radius-sm); padding: 14px; font-size: 13px;
+    }
+    .inline-note b { display: block; margin-bottom: 4px; }
+
+    /* ===== Workflow steps ===== */
+    .step-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .step-card {
+      position: relative; background: #fff; border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg); padding: 36px 28px 28px; box-shadow: var(--shadow-card);
+    }
+    .step-tag {
+      position: absolute; top: -12px; left: 24px; background: var(--color-primary); color: #fff;
+      font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 999px;
+    }
+    .step-card h3 { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+    .step-card > p { color: var(--color-muted); font-size: 15px; margin-bottom: 22px; }
+    .mini {
+      border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-bg-alt);
+      padding: 14px; font-size: 13px;
+    }
+    .mini-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .mini-row + .mini-row { margin-top: 10px; }
+    .mini .sub { color: var(--color-muted); font-size: 12px; }
+    .progress { height: 6px; background: #e3e9fa; border-radius: 999px; overflow: hidden; margin-top: 8px; }
+    .progress i { display: block; height: 100%; width: 62%; background: var(--color-primary); border-radius: 999px; }
+
+    /* ===== Contact / demo form ===== */
+    .contact-grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: 64px; align-items: start; }
+    .contact-copy h2 { font-size: clamp(30px, 3.6vw, 42px); font-weight: 800; margin: 16px 0 18px; }
+    .contact-copy > p { color: var(--color-muted); font-size: 17px; }
+    .check-list { margin-top: 28px; display: grid; gap: 14px; }
+    .check-list li { display: flex; gap: 12px; align-items: flex-start; font-size: 15px; }
+    .check-list li::before {
+      content: ""; flex: 0 0 22px; height: 22px; border-radius: 50%; background: var(--color-primary-soft);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E");
+      background-size: 12px; background-repeat: no-repeat; background-position: center;
+    }
+    .form-card {
+      background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-float); padding: 40px;
+    }
+    .form-card h3 { font-size: 24px; font-weight: 800; }
+    .form-card .form-sub { color: var(--color-muted); font-size: 15px; margin: 8px 0 28px; }
+    .form { display: grid; gap: 20px; }
+    .field { display: flex; flex-direction: column; gap: 8px; }
+    .field label { font-size: 14px; font-weight: 600; }
+    .field label .req { color: var(--color-error); }
+    .field input {
+      height: 48px; padding: 0 16px; border-radius: var(--radius-sm); border: 1px solid #d5ddec;
+      background: #fff; font-size: 16px; color: var(--color-text); transition: border-color .2s, box-shadow .2s;
+      width: 100%;
+    }
+    .field input::placeholder { color: #98a2b3; }
+    .field input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 4px rgba(37,99,235,.14); }
+    .field.has-error input { border-color: var(--color-error); box-shadow: 0 0 0 4px rgba(180,35,24,.10); }
+    .field-error { color: var(--color-error); font-size: 13px; min-height: 0; display: none; }
+    .field.has-error .field-error { display: block; }
+    .form-actions { display: flex; flex-direction: column; gap: 12px; }
+    .form-actions .btn { width: 100%; }
+    .form-note { font-size: 12px; color: var(--color-muted); text-align: center; }
+    .form-status {
+      display: none; padding: 14px 16px; border-radius: var(--radius-sm); font-size: 14px; line-height: 1.5;
+    }
+    .form-status.is-visible { display: block; }
+    .form-status.is-success { background: var(--color-success-bg); color: var(--color-success); border: 1px solid #b7ebcb; }
+    .form-status.is-error { background: var(--color-error-bg); color: var(--color-error); border: 1px solid #fecdca; }
+
+    /* ===== Pricing / offer ===== */
+    .offer-card {
+      background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card); display: grid; grid-template-columns: 1.4fr 1fr; overflow: hidden;
+    }
+    .offer-main { padding: 48px; }
+    .offer-main h2 { font-size: clamp(28px, 3.4vw, 38px); font-weight: 800; margin: 16px 0; }
+    .offer-main > p { color: var(--color-muted); font-size: 16px; }
+    .offer-side {
+      background: linear-gradient(160deg, var(--color-navy), var(--color-navy-2)); color: #fff;
+      padding: 48px 36px; display: flex; flex-direction: column; justify-content: center; text-align: center; gap: 12px;
+    }
+    .offer-side .tag { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9db7ff; font-weight: 700; }
+    .price { font-size: 64px; font-weight: 800; letter-spacing: -0.03em; }
+    .offer-side p { font-size: 14px; color: rgba(255,255,255,.75); }
+    .offer-side .btn { margin-top: 12px; }
+
+    /* ===== Testimonials ===== */
+    .testimonial-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .testimonial {
+      background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+      padding: 32px; box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: 18px;
+    }
+    .stars { color: #f5b700; letter-spacing: 2px; font-size: 15px; }
+    .testimonial blockquote { margin: 0; font-size: 16px; color: var(--color-text); flex: 1; }
+    .author { display: flex; align-items: center; gap: 12px; padding-top: 18px; border-top: 1px solid var(--color-border); }
+    .author .av-lg {
+      width: 40px; height: 40px; border-radius: 50%; background: var(--color-primary-soft);
+      color: var(--color-primary-dark); display: grid; place-items: center; font-weight: 700; font-size: 14px;
+    }
+    .author b { display: block; font-size: 14px; }
+    .author small { color: var(--color-muted); font-size: 13px; }
+
+    /* ===== FAQ ===== */
+    .faq-wrap { max-width: 860px; margin: 0 auto; }
+    .faq-item { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #fff; margin-bottom: 12px; overflow: hidden; }
+    .faq-q {
+      width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 16px;
+      padding: 18px 22px; background: none; border: 0; cursor: pointer; text-align: left;
+      font-size: 16px; font-weight: 600; color: var(--color-text);
+    }
+    .faq-q .chev { transition: transform .25s ease; flex: 0 0 auto; color: var(--color-muted); }
+    .faq-item.is-open .faq-q .chev { transform: rotate(180deg); }
+    .faq-a { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+    .faq-a div { padding: 0 22px 20px; color: var(--color-muted); font-size: 15px; }
+    .faq-item.is-open { border-color: #c9d7f7; box-shadow: var(--shadow-card); }
+
+    /* ===== Final CTA ===== */
+    .cta {
+      position: relative; overflow: hidden; color: #fff; text-align: center;
+      background: linear-gradient(180deg, var(--color-navy), #0a1229);
+      padding: 110px 0;
+    }
+    .cta::before {
+      content: ""; position: absolute; left: 50%; top: -120px; transform: translateX(-50%);
+      width: 640px; height: 640px; border-radius: 50%;
+      background: radial-gradient(closest-side, rgba(37,99,235,.35), transparent);
+      pointer-events: none;
+    }
+    .cta h2 { position: relative; font-size: clamp(32px, 4.4vw, 52px); font-weight: 800; }
+    .cta p { position: relative; color: rgba(255,255,255,.75); font-size: 18px; max-width: 620px; margin: 18px auto 0; }
+    .cta .hero-ctas { justify-content: center; position: relative; }
+
+    /* ===== Footer ===== */
+    .site-footer { background: #070e22; color: rgba(255,255,255,.7); padding: 72px 0 32px; font-size: 14px; }
+    .footer-grid { display: grid; grid-template-columns: 1.6fr repeat(4, 1fr); gap: 40px; }
+    .footer-brand p { margin-top: 16px; max-width: 320px; }
+    .footer-brand .brand { color: #fff; }
+    .footer-col h4 { color: #fff; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 16px; }
+    .footer-col ul { display: grid; gap: 10px; }
+    .footer-col a:hover { color: #fff; }
+    .footer-bottom {
+      margin-top: 56px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.1);
+      display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 13px;
+    }
+
+    /* ===== Reveal animation ===== */
+    .reveal { opacity: 0; transform: translateY(18px); transition: opacity .6s ease, transform .6s ease; }
+    .reveal.is-visible { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      .reveal { opacity: 1; transform: none; }
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 1100px) {
+      .nav { gap: 20px; }
+      .hero-grid, .contact-grid, .offer-card { grid-template-columns: 1fr; }
+      .offer-side { order: -1; }
+      .footer-grid { grid-template-columns: 1fr 1fr 1fr; }
+      .footer-brand { grid-column: 1 / -1; }
+    }
+    @media (max-width: 960px) {
+      .nav, .header-actions .login, .header-actions .btn--primary { display: none; }
+      .menu-toggle { display: inline-flex; }
+      .feature-grid { grid-template-columns: repeat(2, 1fr); }
+      .feature-card--wide { grid-column: span 2; }
+      .step-grid, .testimonial-grid { grid-template-columns: 1fr; }
+      .step-grid { max-width: 560px; margin: 0 auto; }
+      .testimonial-grid { max-width: 620px; margin: 0 auto; }
+    }
+    @media (max-width: 720px) {
+      .section { padding: 72px 0; }
+      .hero { padding: 48px 0 72px; }
+      .feature-grid { grid-template-columns: 1fr; }
+      .feature-card--wide { grid-column: auto; }
+      .form-card, .offer-main { padding: 28px 22px; }
+      .offer-side { padding: 36px 22px; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .mockup-body { grid-template-columns: 1fr; }
+      .mockup-side { display: none; }
+      .panel-row { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) {
+      .container { padding: 0 18px; }
+      .hero h1 { font-size: 38px; }
+      .hero-ctas .btn { width: 100%; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .field input { font-size: 16px; } /* prevents iOS zoom */
+      .brand small { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== Header ===== -->
+  <header class="site-header" id="top">
+    <div class="container header-inner">
+      <a href="#top" class="brand" aria-label="TrainerHub home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
+        </span>
+        <span>TrainerHub<small>Trainer Management</small></span>
+      </a>
+
+      <nav class="nav" aria-label="Primary">
+        <a href="#top" class="is-active">Home</a>
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#faqs">FAQs</a>
+        <a href="#contact">Contact</a>
+      </nav>
+
+      <div class="header-actions">
+        <a href="#contact" class="login">Login</a>
+        <a href="#contact" class="btn btn--primary btn--sm">Get Started</a>
+        <button class="menu-toggle" id="menuToggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
+          <span></span>
+        </button>
+      </div>
+    </div>
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="#top">Home</a>
+      <a href="#features">Features</a>
+      <a href="#how-it-works">How It Works</a>
+      <a href="#faqs">FAQs</a>
+      <a href="#contact">Contact</a>
+      <a href="#contact">Login</a>
+      <a href="#contact" class="btn btn--primary">Get Started</a>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ===== Hero ===== -->
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="container hero-grid">
+        <div>
+          <span class="badge">Trainer Management Platform</span>
+          <h1 id="hero-title">Less Manual Work.<span class="accent">Better Training Management.</span></h1>
+          <p class="lead">One simple platform to manage trainer attendance, class schedules, working hours, leave requests, and training progress — all in one place.</p>
+          <div class="hero-ctas">
+            <a href="#contact" class="btn btn--primary">Get Started
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+            <a href="#features" class="btn btn--ghost">Explore Features</a>
+          </div>
+          <ul class="hero-points">
+            <li>Attendance Made Simple</li>
+            <li>Real-time Class Monitoring</li>
+            <li>Audit-ready Records</li>
+          </ul>
+        </div>
+
+        <div class="mockup" role="img" aria-label="Preview of the TrainerHub dashboard">
+          <div class="mockup-bar">
+            <div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
+            <div class="url-pill">app.trainerhub.io/dashboard</div>
+          </div>
+          <div class="mockup-body">
+            <aside class="mockup-side">
+              <h6>Workspace</h6>
+              <div class="item active">Dashboard</div>
+              <div class="item">Attendance</div>
+              <div class="item">Training</div>
+              <div class="item">Class Schedule</div>
+              <div class="item">Leave Requests</div>
+              <div class="item">Reports</div>
+            </aside>
+            <div class="mockup-main">
+              <div class="greet">Good morning, Admin<small>Today's overview across all batches</small></div>
+              <div class="stats">
+                <div class="stat"><span>Trainers</span><b>42</b></div>
+                <div class="stat"><span>Classes</span><b>38</b></div>
+                <div class="stat"><span>Active</span><b>16</b></div>
+                <div class="stat"><span>Leaves</span><b>2</b></div>
+              </div>
+              <div class="panel-row">
+                <div class="panel">
+                  <h5>Live attendance</h5>
+                  <div class="row-item"><span><i class="av">RP</i>Trainer One</span><span class="pill pill--ok">On site</span></div>
+                  <div class="row-item"><span><i class="av">SK</i>Trainer Two</span><span class="pill pill--ok">Checked in</span></div>
+                  <div class="row-item"><span><i class="av">AM</i>Trainer Three</span><span class="pill pill--warn">Pending</span></div>
+                </div>
+                <div class="panel">
+                  <h5>Weekly hours</h5>
+                  <div class="bars" aria-hidden="true">
+                    <i style="height:45%"></i><i style="height:62%"></i><i class="hi" style="height:80%"></i><i style="height:55%"></i><i class="hi" style="height:92%"></i><i style="height:38%"></i><i style="height:25%"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Features ===== -->
+    <section class="section section--alt" id="features" aria-labelledby="features-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">Key Features</span>
+          <h2 id="features-title">Everything Your Training Team Needs, in One Place</h2>
+          <p>Managing trainers shouldn't require juggling spreadsheets, messages, and separate tools. Bring your everyday training operations together in one organized workspace.</p>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature-card reveal">
+            <div class="icon-box" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            </div>
+            <h3>Attendance Made Simple</h3>
+            <p>Record check-ins and check-outs, review attendance history, and keep daily records organized without paper registers or lost timestamps.</p>
+            <a href="#how-it-works" class="card-link">Attendance Tracking <span aria-hidden="true">→</span></a>
+          </article>
+
+          <article class="feature-card reveal">
+            <div class="icon-box" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+            </div>
+            <h3>Stay on Top of Every Class</h3>
+            <p>Keep class schedules, venues, batches, and replacement classes easy to access so no batch is left unattended or double-booked.</p>
+            <a href="#how-it-works" class="card-link">Class Monitoring <span aria-hidden="true">→</span></a>
+          </article>
+
+          <article class="feature-card reveal">
+            <div class="icon-box" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h9"/></svg>
+            </div>
+            <h3>Clear Working Records</h3>
+            <p>Review working hours and organize leave requests with better visibility for both trainers and administrative team managers.</p>
+            <a href="#how-it-works" class="card-link">Leave Management <span aria-hidden="true">→</span></a>
+          </article>
+
+          <article class="feature-card reveal">
+            <div class="icon-box" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16"/><path d="M8 15l4-4 3 3 5-6"/></svg>
+            </div>
+            <h3>Track Training Progress</h3>
+            <p>Monitor topic completion, syllabus pacing, assignments, and daily training milestones directly within the core operational workspace.</p>
+            <a href="#how-it-works" class="card-link">Topic Tracker <span aria-hidden="true">→</span></a>
+          </article>
+
+          <article class="feature-card feature-card--wide reveal">
+            <div class="icon-box" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
+            </div>
+            <h3>Reports Without the Hassle</h3>
+            <p>Bring together attendance metrics, leave trends, and training progress into clear reports that support faster decisions for the entire team.</p>
+            <div class="inline-note">
+              <b>1 Click Summary Export</b>
+              Generate a consolidated view of attendance, classes, and progress that is ready to share with your management team.
+            </div>
+            <a href="#contact" class="card-link">Reports <span aria-hidden="true">→</span></a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== How It Works ===== -->
+    <section class="section" id="how-it-works" aria-labelledby="workflow-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">Operational Efficiency</span>
+          <h2 id="workflow-title">A Simpler Workflow, From Check-In to Reporting</h2>
+          <p>Designed specifically for busy administrative teams who need reliable records without added complexity.</p>
+        </div>
+
+        <div class="step-grid">
+          <article class="step-card reveal">
+            <span class="step-tag">Step 1</span>
+            <h3>Check In</h3>
+            <p>Trainers record their arrival and departure through the mobile-first interface, with location verification where enabled.</p>
+            <div class="mini">
+              <div class="mini-row"><strong>Mobile Check-In</strong><span class="pill pill--ok">Verified</span></div>
+              <div class="mini-row"><span class="sub">09:02 AM · Campus A</span><span class="sub">On time</span></div>
+            </div>
+          </article>
+
+          <article class="step-card reveal">
+            <span class="step-tag">Step 2</span>
+            <h3>Manage Daily Activities</h3>
+            <p>View assigned classes, venues, schedules, leaves, replacement classes, and syllabus topic completion in real-time.</p>
+            <div class="mini">
+              <div class="mini-row"><span class="sub">Assigned Batches</span><span class="sub">Batch A · 4 classes</span></div>
+              <div class="progress" aria-hidden="true"><i></i></div>
+            </div>
+          </article>
+
+          <article class="step-card reveal">
+            <span class="step-tag">Step 3</span>
+            <h3>Review and Report</h3>
+            <p>Administrators review verified attendance records, aggregated working hours, and class records from a centralized dashboard.</p>
+            <div class="mini">
+              <div class="mini-row"><span class="sub">Weekly Summary</span><span class="sub">Ready</span></div>
+              <div class="mini-row"><strong>Monthly Working Hours</strong><span class="pill pill--ok">Exported</span></div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Contact / Demo Form ===== -->
+    <section class="section section--alt" id="contact" aria-labelledby="contact-title">
+      <div class="container contact-grid">
+        <div class="contact-copy reveal">
+          <span class="eyebrow">Let's Connect</span>
+          <h2 id="contact-title">Let's Make Trainer Management Simpler</h2>
+          <p>Tell us how your team currently manages attendance, schedules, and training activities. Let's explore an automated workflow tailored to your organization's exact needs.</p>
+          <ul class="check-list">
+            <li>Review how your team currently tracks attendance and schedules.</li>
+            <li>Identify repetitive spreadsheet work that can be automated.</li>
+            <li>Receive a simple outline of the next steps for your organization.</li>
+          </ul>
+        </div>
+
+        <div class="form-card reveal">
+          <h3>Tell Us About Your Team</h3>
+          <p class="form-sub">Share your details and our team will get back to you with a tailored walkthrough.</p>
+
+          <form class="form" id="contactForm" novalidate>
+            <div class="field" id="field-name">
+              <label for="name">Full Name <span class="req" aria-hidden="true">*</span></label>
+              <input type="text" id="name" name="name" placeholder="e.g. Ramesh Patel" autocomplete="name" required aria-required="true" aria-describedby="name-error" maxlength="100" />
+              <span class="field-error" id="name-error">Please enter your full name.</span>
+            </div>
+
+            <div class="field" id="field-email">
+              <label for="email">Work Email <span class="req" aria-hidden="true">*</span></label>
+              <input type="email" id="email" name="email" placeholder="ramesh@institution.edu" autocomplete="email" inputmode="email" required aria-required="true" aria-describedby="email-error" maxlength="254" />
+              <span class="field-error" id="email-error">Please enter a valid email address.</span>
+            </div>
+
+            <div class="field" id="field-phone">
+              <label for="phone">Phone Number <span class="req" aria-hidden="true">*</span></label>
+              <input type="tel" id="phone" name="phone" placeholder="+91 98765 43210" autocomplete="tel" inputmode="tel" required aria-required="true" aria-describedby="phone-error" maxlength="20" />
+              <span class="field-error" id="phone-error">Please enter a valid phone number (7–15 digits).</span>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn--primary" id="submitBtn">
+                <span class="spinner" aria-hidden="true"></span>
+                <span class="btn-label">Request a Demo</span>
+              </button>
+              <div class="form-status" id="formStatus" role="status" aria-live="polite"></div>
+              <p class="form-note">Your details are used only to contact you about TrainerHub.</p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Offer ===== -->
+    <section class="section" aria-labelledby="offer-title">
+      <div class="container">
+        <div class="offer-card reveal">
+          <div class="offer-main">
+            <span class="eyebrow">Introductory Review</span>
+            <h2 id="offer-title">Your Trainer Workflow, Reviewed for Just ₹1</h2>
+            <p>Discover opportunities to simplify your daily training operations with a focused, deep-dive review of your existing workflow by enterprise operations engineers.</p>
+            <ul class="check-list">
+              <li>Review your current attendance and class process.</li>
+              <li>Spot class schedule and replacement-class gaps.</li>
+              <li>Find repetitive spreadsheet and messaging tasks.</li>
+              <li>Identify over-reliance on manual records and reports.</li>
+              <li>Get an actionable operational blueprint to address those issues.</li>
+            </ul>
+          </div>
+          <div class="offer-side">
+            <span class="tag">Special Intro Offer</span>
+            <div class="price">₹1</div>
+            <p>A one-time review of your existing workflow, delivered by our operations team.</p>
+            <a href="#contact" class="btn btn--light">Book a Review</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Testimonials ===== -->
+    <section class="section section--alt" aria-labelledby="testimonials-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">Trusted Feedback</span>
+          <h2 id="testimonials-title">Built Around the Needs of Training Teams</h2>
+          <p>Good tools should make everyday work easier. Our goal is to simplify routine tasks and give administrators a clearer view of training operations.</p>
+        </div>
+
+        <div class="testimonial-grid">
+          <figure class="testimonial reveal" style="margin:0">
+            <div class="stars" aria-label="5 out of 5 stars">★★★★★</div>
+            <blockquote>"Attendance records are significantly easier to review when the entire team's information is organized in one reliable place instead of countless WhatsApp groups."</blockquote>
+            <figcaption class="author">
+              <span class="av-lg" aria-hidden="true">TC</span>
+              <div><b>Training Coordinator</b><small>Training Department</small></div>
+            </figcaption>
+          </figure>
+
+          <figure class="testimonial reveal" style="margin:0">
+            <div class="stars" aria-label="5 out of 5 stars">★★★★★</div>
+            <blockquote>"Having class schedules and live syllabus updates together makes daily coordination simpler. When a trainer takes emergency leave, replacements are resolved instantly."</blockquote>
+            <figcaption class="author">
+              <span class="av-lg" aria-hidden="true">PT</span>
+              <div><b>Placement Trainer</b><small>Academic Operations</small></div>
+            </figcaption>
+          </figure>
+
+          <figure class="testimonial reveal" style="margin:0">
+            <div class="stars" aria-label="5 out of 5 stars">★★★★★</div>
+            <blockquote>"A centralized view of daily training activities helps the management team stay informed with transparent audit trails for each academic module."</blockquote>
+            <figcaption class="author">
+              <span class="av-lg" aria-hidden="true">TA</span>
+              <div><b>Training Administrator</b><small>Engineering College</small></div>
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FAQ ===== -->
+    <section class="section" id="faqs" aria-labelledby="faq-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">Common Questions</span>
+          <h2 id="faq-title">Frequently Asked Questions</h2>
+          <p>Everything you need to know about getting started with TrainerHub.</p>
+        </div>
+
+        <div class="faq-wrap">
+          <div class="faq-item is-open reveal">
+            <button class="faq-q" aria-expanded="true" aria-controls="faq-a-1" id="faq-q-1">
+              What is TrainerHub?
+              <svg class="chev" width="14" height="10" viewBox="0 0 14 10" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 2l6 6 6-6"/></svg>
+            </button>
+            <div class="faq-a" id="faq-a-1" role="region" aria-labelledby="faq-q-1">
+              <div>TrainerHub is a trainer management platform that helps organizations organize trainers, classes, attendance, and daily training operations in one place.</div>
+            </div>
+          </div>
+
+          <div class="faq-item reveal">
+            <button class="faq-q" aria-expanded="false" aria-controls="faq-a-2" id="faq-q-2">
+              Can trainers check in using their mobile phones?
+              <svg class="chev" width="14" height="10" viewBox="0 0 14 10" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 2l6 6 6-6"/></svg>
+            </button>
+            <div class="faq-a" id="faq-a-2" role="region" aria-labelledby="faq-q-2">
+              <div>Yes. The check-in experience is mobile-first, and location verification can be enabled where your organization requires it.</div>
+            </div>
+          </div>
+
+          <div class="faq-item reveal">
+            <button class="faq-q" aria-expanded="false" aria-controls="faq-a-3" id="faq-q-3">
+              Can administrators manage multiple trainers simultaneously?
+              <svg class="chev" width="14" height="10" viewBox="0 0 14 10" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 2l6 6 6-6"/></svg>
+            </button>
+            <div class="faq-a" id="faq-a-3" role="region" aria-labelledby="faq-q-3">
+              <div>Yes. Administrators can view and manage schedules, leave requests, and records for many trainers from a single dashboard.</div>
+            </div>
+          </div>
+
+          <div class="faq-item reveal">
+            <button class="faq-q" aria-expanded="false" aria-controls="faq-a-4" id="faq-q-4">
+              Can we track class schedules and replacement classes?
+              <svg class="chev" width="14" height="10" viewBox="0 0 14 10" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 2l6 6 6-6"/></svg>
+            </button>
+            <div class="faq-a" id="faq-a-4" role="region" aria-labelledby="faq-q-4">
+              <div>Yes. Class schedules, venues, batches, and replacement classes are kept together so every batch stays covered.</div>
+            </div>
+          </div>
+
+          <div class="faq-item reveal">
+            <button class="faq-q" aria-expanded="false" aria-controls="faq-a-5" id="faq-q-5">
+              Can we use existing Excel data?
+              <svg class="chev" width="14" height="10" viewBox="0 0 14 10" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 2l6 6 6-6"/></svg>
+            </button>
+            <div class="faq-a" id="faq-a-5" role="region" aria-labelledby="faq-q-5">
+              <div>Existing spreadsheet records can be reviewed and brought into the platform as part of the onboarding process.</div>
+            </div>
+          </div>
+
+          <div class="faq-item reveal">
+            <button class="faq-q" aria-expanded="false" aria-controls="faq-a-6" id="faq-q-6">
+              Does the application work offline?
+              <svg class="chev" width="14" height="10" viewBox="0 0 14 10" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 2l6 6 6-6"/></svg>
+            </button>
+            <div class="faq-a" id="faq-a-6" role="region" aria-labelledby="faq-q-6">
+              <div>An internet connection is needed to sync records. Please confirm offline support with our team for your specific setup.</div>
+            </div>
+          </div>
+
+          <div class="faq-item reveal">
+            <button class="faq-q" aria-expanded="false" aria-controls="faq-a-7" id="faq-q-7">
+              How can we get started?
+              <svg class="chev" width="14" height="10" viewBox="0 0 14 10" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 2l6 6 6-6"/></svg>
+            </button>
+            <div class="faq-a" id="faq-a-7" role="region" aria-labelledby="faq-q-7">
+              <div>Fill in the short form in the "Let's Connect" section and our team will reach out to schedule a walkthrough.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Final CTA ===== -->
+    <section class="cta" aria-labelledby="cta-title">
+      <div class="container">
+        <h2 id="cta-title">Ready to Simplify Your Training Operations?</h2>
+        <p>Bring attendance, schedules, activity, and training data into one clear workspace your whole team can rely on.</p>
+        <div class="hero-ctas">
+          <a href="#contact" class="btn btn--primary">Get Started</a>
+          <a href="#features" class="btn btn--outline-light">Explore Features</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== Footer ===== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#top" class="brand">
+            <span class="brand-mark" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
+            </span>
+            <span>TrainerHub</span>
+          </a>
+          <p>A smarter way to organize trainers, classes, attendance, and daily training operations.</p>
+        </div>
+
+        <nav class="footer-col" aria-label="Quick links">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="#top">Home</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#how-it-works">How It Works</a></li>
+            <li><a href="#faqs">FAQs</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </nav>
+
+        <nav class="footer-col" aria-label="Platform">
+          <h4>Platform</h4>
+          <ul>
+            <li><a href="#how-it-works">Attendance Tracking</a></li>
+            <li><a href="#how-it-works">Class Monitoring</a></li>
+            <li><a href="#how-it-works">Leave Management</a></li>
+            <li><a href="#how-it-works">Topic Tracker</a></li>
+            <li><a href="#features">Reports</a></li>
+          </ul>
+        </nav>
+
+        <nav class="footer-col" aria-label="Account">
+          <h4>Account</h4>
+          <ul>
+            <li><a href="#contact">Login</a></li>
+            <li><a href="#contact">Get Started</a></li>
+          </ul>
+        </nav>
+
+        <nav class="footer-col" aria-label="Legal">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="#top">Privacy Policy</a></li>
+            <li><a href="#top">Terms of Use</a></li>
+          </ul>
+        </nav>
+      </div>
+
+      <div class="footer-bottom">
+        <span>© 2026 TrainerHub. All rights reserved.</span>
+        <span>Built for training teams</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      "use strict";
+
+      /* ===== Configuration ===== */
+      const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyRTB5FLZXXuXlS2t6iAcllOrcpZQLp6z2HWdXzRcy_s2BxyZEWYypd_j89I6uDsw2X/exec";
+
+      /* ===== Mobile menu ===== */
+      const menuToggle = document.getElementById("menuToggle");
+      const mobileMenu = document.getElementById("mobileMenu");
+
+      function setMenu(open) {
+        mobileMenu.classList.toggle("is-open", open);
+        menuToggle.setAttribute("aria-expanded", String(open));
+        menuToggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+      }
+
+      menuToggle.addEventListener("click", function () {
+        setMenu(!mobileMenu.classList.contains("is-open"));
+      });
+
+      mobileMenu.querySelectorAll("a").forEach(function (link) {
+        link.addEventListener("click", function () { setMenu(false); });
+      });
+
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") setMenu(false);
+      });
+
+      /* ===== Active nav highlighting ===== */
+      const sectionIds = ["features", "how-it-works", "faqs", "contact"];
+      const navLinks = document.querySelectorAll(".nav a");
+
+      if ("IntersectionObserver" in window) {
+        const navObserver = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
+            navLinks.forEach(function (link) {
+              link.classList.toggle("is-active", link.getAttribute("href") === "#" + entry.target.id);
+            });
+          });
+        }, { rootMargin: "-45% 0px -50% 0px" });
+
+        sectionIds.forEach(function (id) {
+          const el = document.getElementById(id);
+          if (el) navObserver.observe(el);
+        });
+
+        /* ===== Reveal on scroll ===== */
+        const revealObserver = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("is-visible");
+              revealObserver.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.12 });
+
+        document.querySelectorAll(".reveal").forEach(function (el) {
+          revealObserver.observe(el);
+        });
+      } else {
+        document.querySelectorAll(".reveal").forEach(function (el) {
+          el.classList.add("is-visible");
+        });
+      }
+
+      /* ===== FAQ accordion ===== */
+      const faqItems = document.querySelectorAll(".faq-item");
+
+      faqItems.forEach(function (item) {
+        const button = item.querySelector(".faq-q");
+        const panel = item.querySelector(".faq-a");
+
+        function syncHeight() {
+          panel.style.maxHeight = item.classList.contains("is-open") ? panel.scrollHeight + "px" : "0px";
+        }
+
+        button.addEventListener("click", function () {
+          const willOpen = !item.classList.contains("is-open");
+
+          faqItems.forEach(function (other) {
+            other.classList.remove("is-open");
+            other.querySelector(".faq-q").setAttribute("aria-expanded", "false");
+            other.querySelector(".faq-a").style.maxHeight = "0px";
+          });
+
+          if (willOpen) {
+            item.classList.add("is-open");
+            button.setAttribute("aria-expanded", "true");
+          }
+          syncHeight();
+        });
+
+        if (item.classList.contains("is-open")) {
+          button.setAttribute("aria-expanded", "true");
+          syncHeight();
+        }
+      });
+
+      window.addEventListener("resize", function () {
+        faqItems.forEach(function (item) {
+          if (item.classList.contains("is-open")) {
+            item.querySelector(".faq-a").style.maxHeight = item.querySelector(".faq-a").scrollHeight + "px";
+          }
+        });
+      });
+
+      /* ===== Form elements ===== */
+      const form = document.getElementById("contactForm");
+      const nameInput = document.getElementById("name");
+      const emailInput = document.getElementById("email");
+      const phoneInput = document.getElementById("phone");
+      const submitBtn = document.getElementById("submitBtn");
+      const btnLabel = submitBtn.querySelector(".btn-label");
+      const statusBox = document.getElementById("formStatus");
+
+      /* ===== Validation ===== */
+      const NAME_PATTERN = /^[\p{L}\s.'-]+$/u;
+      const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const PHONE_PATTERN = /^\+?[0-9\s()-]+$/;
+
+      function setFieldError(fieldId, message) {
+        const wrapper = document.getElementById(fieldId);
+        const input = wrapper.querySelector("input");
+        const errorEl = wrapper.querySelector(".field-error");
+        if (message) {
+          wrapper.classList.add("has-error");
+          errorEl.textContent = message;
+          input.setAttribute("aria-invalid", "true");
+        } else {
+          wrapper.classList.remove("has-error");
+          input.removeAttribute("aria-invalid");
+        }
+      }
+
+      function validateName(value) {
+        if (!value) return "Please enter your full name.";
+        if (value.length > 100) return "Name must be 100 characters or fewer.";
+        if (!NAME_PATTERN.test(value)) return "Name can only contain letters, spaces, apostrophes, dots, and hyphens.";
+        return "";
+      }
+
+      function validateEmail(value) {
+        if (!value) return "Please enter your email address.";
+        if (value.length > 254) return "Email must be 254 characters or fewer.";
+        if (!EMAIL_PATTERN.test(value)) return "Please enter a valid email address.";
+        return "";
+      }
+
+      function validatePhone(value) {
+        if (!value) return "Please enter your phone number.";
+        if (value.length > 20) return "Phone number must be 20 characters or fewer.";
+        if (!PHONE_PATTERN.test(value)) return "Phone can only contain digits, spaces, dashes, parentheses, and a leading +.";
+        const digits = value.replace(/\D/g, "").length;
+        if (digits < 7 || digits > 15) return "Please enter a valid phone number (7–15 digits).";
+        return "";
+      }
+
+      function validateAll() {
+        const nameError = validateName(nameInput.value.trim());
+        const emailError = validateEmail(emailInput.value.trim());
+        const phoneError = validatePhone(phoneInput.value.trim());
+
+        setFieldError("field-name", nameError);
+        setFieldError("field-email", emailError);
+        setFieldError("field-phone", phoneError);
+
+        const firstInvalid = [
+          [nameError, nameInput], [emailError, emailInput], [phoneError, phoneInput]
+        ].find(function (pair) { return pair[0]; });
+
+        if (firstInvalid) firstInvalid[1].focus();
+        return !firstInvalid;
+      }
+
+      /* Live feedback once a field has been touched */
+      [[nameInput, validateName, "field-name"], [emailInput, validateEmail, "field-email"], [phoneInput, validatePhone, "field-phone"]]
+        .forEach(function (entry) {
+          const input = entry[0];
+          const validator = entry[1];
+          const fieldId = entry[2];
+          input.addEventListener("blur", function () {
+            if (input.value.trim() !== "") setFieldError(fieldId, validator(input.value.trim()));
+          });
+          input.addEventListener("input", function () {
+            if (document.getElementById(fieldId).classList.contains("has-error")) {
+              setFieldError(fieldId, validator(input.value.trim()));
+            }
+          });
+        });
+
+      /* ===== Status messages ===== */
+      function showStatus(type, message) {
+        statusBox.className = "form-status is-visible is-" + type;
+        statusBox.textContent = message;
+      }
+
+      function hideStatus() {
+        statusBox.className = "form-status";
+        statusBox.textContent = "";
+      }
+
+      function setLoading(isLoading) {
+        submitBtn.disabled = isLoading;
+        submitBtn.classList.toggle("is-loading", isLoading);
+        btnLabel.textContent = isLoading ? "Submitting…" : "Request a Demo";
+      }
+
+      function showSuccess() {
+        setLoading(false);
+        form.reset();
+        showStatus(
+          "success",
+          "Thanks! Your request has been sent to our team. Our browser can't confirm the save, so if we don't reach out within two business days, please contact us again."
+        );
+      }
+
+      function showError() {
+        setLoading(false);
+        showStatus(
+          "error",
+          "Something went wrong and your request may not have been sent. Please check your connection and try again."
+        );
+      }
+
+      /* ===== Submission ===== */
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        hideStatus();
+
+        if (!validateAll()) {
+          showStatus("error", "Please correct the highlighted fields and try again.");
+          return;
+        }
+
+        const name = nameInput.value.trim();
+        const email = emailInput.value.trim();
+        const phone = phoneInput.value.trim();
+
+        setLoading(true);
+
+        const url = SCRIPT_URL + "?" + new URLSearchParams({
+          name: name,
+          email: email,
+          phone: phone
+        });
+
+        fetch(url, {
+          method: "GET",
+          mode: "no-cors"
+        })
+          .then(() => showSuccess())
+          .catch(() => showError());
+      });
+    })();
+  </script>
+</body>
+</html>
